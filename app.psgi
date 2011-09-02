@@ -28,7 +28,11 @@ my $app = sub {
         if ($hex->color) {
             die;
         }
-        $hex->color($req->param('color'));
+
+        my @hexes = $game->board->hexes_of_id($hex->id);
+        warn $_ for @hexes;
+        $_->color($req->param('color')) for @hexes;
+
         $game->proceed;
     }
 

@@ -34,8 +34,7 @@ $(function () {
     </script>
   </head>
   <body>
-    <h1>title</h1>
-    <p>body</p>
+    <h1>Euler Getter</h1>
     <div id="board" style="font-size: 100px; line-height: 70px; letter-spacing: 0">
 ? for my $y (0 .. $board->size) {
     <div style="margin-left: <?= ($board->size - $y) * 50 + 50 ?>px">
@@ -49,5 +48,17 @@ $(function () {
     </div>
 ? }
     </div>
+
+    <table>
+      <tbody>
+        <tr>
+          <th>red</th><th>blue</th>
+        </tr>
+        <tr>
+          <td><?= $_{game}->euler_score_of_color('red') ?></td>
+          <td><?= $_{game}->euler_score_of_color('blue') ?></td>
+        </tr>
+      </tbody>
+    </table>
   </body>
 </html>
