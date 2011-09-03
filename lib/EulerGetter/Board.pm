@@ -24,8 +24,8 @@ sub new {
 }
 
 sub new_hex {
-    my ($self, $x, $y) = @_;
-    return EulerGetter::Hex->new(x => $x, y => $y, board => $self, color => '');
+    my ($self, $x, $y, %args) = @_;
+    return EulerGetter::Hex->new(x => $x, y => $y, board => $self, color => '', %args);
 }
 
 sub hex_at {
@@ -64,6 +64,36 @@ sub hex_at_dir {
 sub hexes_of_id {
     my ($self, $id) = @_;
     return grep { $_->id == $id } $self->all_hexes;
+}
+
+sub as_hash {
+    my $self = shift;
+    return {
+        size  => $self->size,
+        hexes => [
+            map {
+                [ map { $_->color } @$_ ]
+            } @{ $self->hexes }
+        ],
+    };
+}
+
+sub from_hash {
+    my ($class, $hash) = @_;
+    my $size = $hash->{size};
+    my $self = bless { size => $size }, $class;
+
+    my @hexes;
+    for my $y (0 .. $size) {
+        my @line;
+        for my $x (0 .. $size) {
+            push @line, $self->new_hex($x, $y, color => $hash->{hexes}->[$y]->[$x]);
+        }
+        push @hexes, \@line;
+    }
+    $self->hexes(\@hexes);
+
+    return $self;
 }
 
 1;

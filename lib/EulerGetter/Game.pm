@@ -3,24 +3,38 @@ use strict;
 use warnings;
 use EulerGetter::Board;
 use Class::Accessor::Lite
-    new => 1,
     rw => [ 'board', 'turn' ];
 
 use constant COLORS => [ 'red', 'blue' ];
+
+sub new {
+    my ($class, $size) = @_;
+    return bless {
+        board => EulerGetter::Board->new($size),
+        turn => 0,
+    }, $class;
+}
 
 sub current_color {
     my $self = shift;
     return COLORS->[ $self->turn % 2 ];
 }
 
-sub proceed {
-    my $self = shift;
-    $self->{turn}++;
-}
-
 sub hexes_of_color {
     my ($self, $color) = @_;
     return grep { $_->color eq $color } $self->board->all_hexes;
+}
+
+sub proceed_trun_with_hex {
+    my ($self, $x, $y) = @_;
+
+    my $hex = $self->board->hex_at($x, $y) or die;
+    die if $hex->color;
+
+    my @hexes = $self->board->hexes_of_id($hex->id);
+    $_->color($self->current_color) for @hexes;
+
+    $self->{turn}++;
 }
 
 sub euler_score_of_color {
@@ -30,8 +44,8 @@ sub euler_score_of_color {
     my (%vertices, %edges, %faces);
 
     foreach my $hex (@hexes) {
-        $faces{ $hex->id }++;
         warn "hex:$hex";
+        $faces{ $hex->id }++;
 
         foreach my $hex2 ($hex->nexts) {
             next unless $hex2->color eq $color;
@@ -53,6 +67,24 @@ sub euler_score_of_color {
 
     warn sprintf "$color v:%d e:%d n:%d", scalar(keys %vertices), scalar(keys %edges), scalar(keys %faces);
     return scalar(keys %vertices) - scalar(keys %edges) + scalar(keys %faces);
+}
+
+sub as_hash {
+    my $self = shift;
+
+    return {
+        board => $self->board->as_hash,
+        turn  => $self->turn,
+    };
+}
+
+sub from_hash {
+    my ($class, $hash) = @_;
+
+    return bless {
+        board => EulerGetter::Board->from_hash($hash->{board}),
+        turn  => $hash->{turn},
+    }, $class
 }
 
 1;
