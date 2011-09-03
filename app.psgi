@@ -10,6 +10,10 @@ use Router::Simple::Declare;
 use String::Random qw(random_regex);
 use JSON::XS;
 
+our $Root;
+BEGIN { $Root = file(__FILE__)->dir }
+
+use lib $Root->subdir('lib').q();
 use EulerGetter::Game;
 
 my $Router = router {
@@ -18,8 +22,6 @@ my $Router = router {
     connect '/next' => { action => 'game_next' };
     connect '/game/{game_id}' => { action => 'game' };
 };
-
-my $Root = file(__FILE__)->dir;
 
 our $mtf = Text::MicroTemplate::File->new(
     include_path => [ $Root->subdir('root') ],
