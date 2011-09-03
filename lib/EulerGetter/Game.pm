@@ -2,6 +2,7 @@ package EulerGetter::Game;
 use strict;
 use warnings;
 use EulerGetter::Board;
+use List::MoreUtils qw(any);
 use Class::Accessor::Lite
     rw => [ 'board', 'turn' ];
 
@@ -40,32 +41,43 @@ sub proceed_trun_with_hex {
 sub euler_score_of_color {
     my ($self, $color) = @_;
 
-    my @hexes = $self->hexes_of_color($color);
     my (%vertices, %edges, %faces);
 
-    foreach my $hex (@hexes) {
-        warn "hex:$hex";
-        $faces{ $hex->id }++;
+    foreach my $hex ($self->board->all_hexes) {
+        $faces{ $hex->id }++ if any { $_->color eq $color } $hex;
 
         foreach my $hex2 ($hex->nexts) {
-            next unless $hex2->color eq $color;
-            warn "hex,hex2:$hex,$hex2";
+            # next unless $hex2->color eq $color;
 
-            my $key = join ',', map $_->id, ($hex, $hex2);
-            $edges{$key}++;
+            my $key = join ',', sort { $a <=> $b } map $_->id, ($hex, $hex2);
 
-            foreach my $hex3 ($hex->nexts) {
-                next unless $hex3->color eq $color;
-                next unless $hex3->is_adjacent_to($hex2);
-                warn "hex,hex2,hex3:$hex,$hex2,$hex3";
+            # XXX special case
+            if ($hex->x == 0 && $hex->y == $self->board->size - 1
+                && $hex2->x == 1 && $hex2->y == $self->board->size) {
+                $key = join ',', map $_->id, ($hex, $hex2);
+            }
+            $edges{$key}++ if any { $_->color eq $color } $hex, $hex2;
 
-                my $key = join ',', map $_->id, ($hex, $hex2, $hex3);
-                $vertices{$key}++;
+            foreach my $hex3 ($hex2->nexts) {
+                # next unless $hex3->color eq $color;
+                next unless $hex3->is_adjacent_to($hex);
+
+                my @hexes = ( $hex, $hex2, $hex3 );
+                for (1 .. 3) {
+                    if ($hexes[1]->id < $hexes[0]->id) {
+                        push @hexes, shift @hexes;
+                    }
+                }
+
+                my $key = join ',', map $_->id, @hexes;
+                $vertices{$key}++ if any { $_->color eq $color } $hex, $hex2, $hex3;
             }
         }
     }
 
     warn sprintf "$color v:%d e:%d n:%d", scalar(keys %vertices), scalar(keys %edges), scalar(keys %faces);
+    warn "e=" . join ' ', keys %edges;
+    warn "v=" . join ' ', keys %vertices;
     return scalar(keys %vertices) - scalar(keys %edges) + scalar(keys %faces);
 }
 

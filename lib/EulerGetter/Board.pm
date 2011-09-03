@@ -17,7 +17,6 @@ sub new {
         }
         push @hexes, \@line;
     }
-    # $hexes[ $self->size ][0] = $hexes[0][ $self->size ] = $self->new_hex(0, $self->size);
     $self->hexes(\@hexes);
 
     return $self;
@@ -94,6 +93,13 @@ sub from_hash {
     $self->hexes(\@hexes);
 
     return $self;
+}
+
+sub dump_as_string {
+    my $self = shift;
+    my @lines;
+    push @lines, join '', map { substr($_->color, 0, 1) || '.' } @$_ for @{ $self->hexes };
+    return join "\n", @lines;
 }
 
 1;

@@ -48,10 +48,7 @@ sub nexts {
 
     return grep { $_ } map {
         my ($dx, $dy) = @$_;
-        $self->board->hex_at_dir(
-            $self->x, $self->y,
-            $dx, $dy
-        );
+        $self->board->hex_at($self->x + $dx, $self->y + $dy)
     } @{+NEXT_DELTAS};
 }
 
@@ -86,6 +83,41 @@ sub is_adjacent_to {
     return $dy == +1 || $dy == -1 if $dx ==  0;
     return $dy ==  0 || $dy == +1 if $dx == +1;
     return $dy == -1 || $dy ==  0 if $dx == -1;
+}
+
+#  . .
+# . x a
+#  a y
+sub aside_siblings_with {
+    my ($self, $hex) = @_;
+
+    return unless $self->is_adjacent_to($hex);
+
+    my ($dx, $dy) = ( $hex->x - $self->x, $hex->y - $self->y );
+
+    my @deltas;
+    if ($dx == +1 && $dy == 0) {
+        @deltas = (
+            [  0, -1 ],
+            [ +1, +1 ],
+        );
+    } elsif ($dx == +1 && $dy == +1) {
+        @deltas = (
+            [ +1,  0 ],
+            [  0, +1 ],
+        );
+    } elsif ($dx == 0 && $dy == +1) {
+        @deltas = (
+            [ +1, +1 ],
+            [ -1,  0 ],
+        );
+    } else {
+        return $hex->aside_siblings_with($self);
+    }
+
+    return grep { $_ } map {
+        $self->board->hexes->[ $self->y + $_->[1] ]->[ $self->x + $_->[0] ]
+    } @deltas;
 }
 
 1;
