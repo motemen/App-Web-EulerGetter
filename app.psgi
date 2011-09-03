@@ -21,6 +21,7 @@ my $Router = router {
     connect '/start' => { action => 'start' };
     connect '/next' => { action => 'game_next' };
     connect '/game/{game_id}' => { action => 'game' };
+    connect '/game.json' => { action => 'game_json' };
 };
 
 our $mtf = Text::MicroTemplate::File->new(
@@ -29,7 +30,7 @@ our $mtf = Text::MicroTemplate::File->new(
 
 sub game_and_color {
     my ($dbh, $game_id, $session) = @_;
-    my $row = $dbh->select_row('SELECT * FROM game WHERE id = ?', $game_id) or die;
+    my $row = $dbh->select_row('SELECT * FROM game WHERE id = ?', $game_id) or die 'row not found';
     my $color = $row->{red} eq $session->id ? 'red'
               : $row->{blue} eq $session->id ? 'blue'
               : undef;
@@ -45,7 +46,7 @@ sub start {
     my ($req, $session, $dbh, $m) = @_;
     my $game_id = random_regex('\w{6}');
     my $game = EulerGetter::Game->new($req->param('size') || 4);
-    $dbh->query('INSERT INTO game (id, red, content) VALUES (?, ?, ?)', $game_id, $session->id, encode_json $game->as_hash);
+    $dbh->query('INSERT INTO game (id, red, content, updated_on) VALUES (?, ?, ?, ?)', $game_id, $session->id, encode_json($game->as_hash), time());
 
     return [ 302, [ Location => $req->script_name . "/game/$game_id" ], [ ] ];
 }
@@ -61,11 +62,24 @@ sub game {
         $dbh->query('UPDATE game SET blue = ? WHERE id = ?', $session->id, $game_id);
     }
 
-    my $content = $mtf->render_file('index.mt', game => $game, color => $color, game_id => $game_id);
+    my $content = $mtf->render_file('index.mt', game => $game, color => $color, game_id => $game_id, time => $row->{updated_on});
     return [
         200,
         [ 'Content-Type', 'text/html; charset=utf-8' ],
         [ $content ],
+    ];
+}
+
+sub game_json {
+    my ($req, $session, $dbh, $m) = @_;
+
+    my $game_id = $req->param('game_id') or die;
+    my ($game, undef, $row) = game_and_color($dbh, $game_id, $session);
+    
+    return [
+        200,
+        [ 'Content-Type' => 'application/json' ],
+        [ encode_json { time => $row->{updated_on}, game => $game->as_hash } ],
     ];
 }
 
@@ -79,7 +93,7 @@ sub game_next {
         my $x = $req->param('x');
         my $y = $req->param('y');
         $game->proceed_trun_with_hex($x, $y);
-        $dbh->query('UPDATE game SET content = ? WHERE id = ?', encode_json($game->as_hash), $game_id);
+        $dbh->query('UPDATE game SET content = ?, updated_on = ? WHERE id = ?', encode_json($game->as_hash), time(), $game_id);
     } else {
         die;
     }

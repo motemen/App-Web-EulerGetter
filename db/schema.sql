@@ -2,5 +2,6 @@ CREATE TABLE game (
     id PRIMARY KEY,
     red,
     blue,
-    content
+    content,
+    updated_on
 );

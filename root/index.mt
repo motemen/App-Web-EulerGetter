@@ -1,4 +1,6 @@
 ? local %_ = @_;
+? my $game = $_{game};
+? my $color = $_{color};
 ? my $board = $_{game}->board;
 <!DOCTYPE html>
 <html>
@@ -19,15 +21,12 @@ th {
     </style>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
     <script type="text/javascript">
-var Game = function () {
-};
-
-var game = new Game();
+? if ($color && $game->current_color eq $color) {
 
 $(function () {
   $('span.hex').click(function () {
     $.post(
-      '/next',
+      '../next',
       { x: $(this).attr('data-hex-x'), y: $(this).attr('data-hex-y'), game_id: $('#board').attr('data-game-id') }
     ).done(
       function () {
@@ -36,6 +35,23 @@ $(function () {
     );
   });
 });
+
+? }
+
+setInterval(
+  function () {
+    $.get(
+      '../game.json?game_id=' + $('#board').attr('data-game-id')
+    ).done(
+      function (x) {
+        if (x.time > $('#board').attr('data-game-time')) {
+          location.reload();
+        }
+      }
+    )
+  },
+  20 * 1000
+);
     </script>
   </head>
   <body>
@@ -60,7 +76,7 @@ $(function () {
       </tbody>
     </table>
 
-    <div id="board" data-game-id="<?= $_{game_id} ?>" style="font-size: 100px; line-height: 70px; letter-spacing: 0">
+    <div id="board" data-game-id="<?= $_{game_id} ?>" data-game-time="<?= $_{time} ?>" style="font-size: 100px; line-height: 70px; letter-spacing: 0">
 ? for my $y (0 .. $board->size) {
     <div style="margin-left: <?= ($board->size - $y) * 50 + 50 ?>px">
 ?   for my $x (0 .. $board->size) {
