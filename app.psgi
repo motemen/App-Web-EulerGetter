@@ -100,7 +100,7 @@ my $app = sub {
 };
 
 builder {
-    enable 'Session';
+    enable 'Session', store => 'File';
     $app;
 };
 
