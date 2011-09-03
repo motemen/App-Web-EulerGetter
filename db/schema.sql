@@ -1,5 +1,5 @@
 CREATE TABLE game (
-    id,
+    id PRIMARY KEY
     red,
     blue,
     content
