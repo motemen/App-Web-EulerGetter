@@ -47,7 +47,7 @@ sub start {
     my $game = EulerGetter::Game->new($req->param('size') || 4);
     $dbh->query('INSERT INTO game (id, red, content) VALUES (?, ?, ?)', $game_id, $session->id, encode_json $game->as_hash);
 
-    return [ 302, [ Location => "/game/$game_id" ], [ ] ];
+    return [ 302, [ Location => $req->script_name . "/game/$game_id" ], [ ] ];
 }
 
 sub game {
