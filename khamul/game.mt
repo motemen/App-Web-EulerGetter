@@ -36,6 +36,12 @@ $(function () {
   });
 });
 
+? } else {
+
+$(function () {
+  $('<script/>').attr('src', '../reload.js?game_id=' + $('#board').attr('data-game-id')).appendTo(document.body);
+});
+
 ? }
 
 setInterval(

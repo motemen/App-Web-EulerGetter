@@ -5,6 +5,8 @@ use JSON::XS;
 use String::Random qw(random_regex);
 use Path::Class qw(file);
 use HTTP::Status qw(:constants);
+use Coro;
+use Coro::Signal;
 
 our $Root;
 BEGIN { $Root = file(__FILE__)->dir }
@@ -21,6 +23,7 @@ router {
     connect '/next' => { code => \&game_next }, { method => 'POST' };
     connect '/game/{game_id}' => { code => \&game };
     connect '/game.json' => { code => \&game_json };
+    connect '/reload.js' => { code => \&reload_js };
 };
 
 fallback \&index;
@@ -94,6 +97,8 @@ sub game_json {
     ];
 }
 
+my %Signals;
+
 sub game_next {
     my $k = shift;
 
@@ -102,11 +107,32 @@ sub game_next {
         my $y = $k->request->param('y');
         $k->game->proceed_trun_with_hex($x, $y);
         $k->dbh->query('UPDATE game SET content = ?, updated_on = ? WHERE id = ?', encode_json($k->game->as_hash), time(), $k->game_id);
+        if (my $signal = $Signals{ $k->game_id }) {
+            $signal->broadcast;
+        }
     } else {
         die;
     }
 
     return [ HTTP_NO_CONTENT, [], [] ];
+}
+
+sub reload_js {
+    my $k = shift;
+
+    if ($k->game_id) {
+        my $signal = $Signals{ $k->game_id } ||= Coro::Signal->new;
+        return sub {
+            my $respond = shift;
+            my $writer = $respond->([ 200, [ 'Content-Type' => 'text/javascript' ] ]);
+            async {
+                $signal->wait;
+                $writer->write('location.reload()');
+            };
+        };
+    } else {
+        return [ 404, [], [] ];
+    }
 }
 
 builder {
