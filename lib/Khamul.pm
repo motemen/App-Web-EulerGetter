@@ -24,7 +24,7 @@ sub import {
 }
 
 sub __router (&) {
-    our $Router = Router::Simple::Declare::router($_[0]);
+    our $Router = Router::Simple::Declare::router(\&{$_[0]});
 }
 
 sub router {
