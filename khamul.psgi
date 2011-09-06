@@ -23,10 +23,7 @@ router {
     connect '/game.json' => { code => \&game_json };
 };
 
-fallback {
-    my $self = shift;
-    return [ HTTP_FOUND, [ Location => $self->req->script_name || '/' ], [] ];
-};
+fallback \&index;
 
 context_builds (
     dbh => sub {
