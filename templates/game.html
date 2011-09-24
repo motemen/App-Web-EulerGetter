@@ -1,0 +1,112 @@
+% my $handler = $_[0]{handler};
+% my $game  = $handler->game;
+% my $color = $handler->color;
+% my $board = $handler->game->board;
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+body {
+  font-family: "Lucida Grande", sans-serif;
+}
+th {
+  text-align: right;
+}
+.hex {
+  cursor: pointer;
+  height: 0.5em;
+}
+    </style>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.ev.js"></script>
+    <script type="text/javascript">
+function updateBoard (game) {
+  var size = game.board.size;
+  $('#game-turn').text(game.turn);
+  $('#game-current-color').text(game.current_color);
+  $('#game-score-red').text(game.score.red);
+  $('#game-score-blue').text(game.score.blue);
+  for (var y = 0; y <= size; y++) {
+    for (var x = 0; x <= size; x++) {
+      var color = game.board.hexes[y][x];
+      if (color) {
+        $('span.hex[data-hex-x='+x+'][data-hex-y='+y+']').css('color', color);
+      }
+    }
+  }
+}
+
+$.ev.loop(
+  location.pathname + '/poll', function (evs) {
+    console.log(evs);
+    for (var i = 0; i < evs.length; i++) {
+      try {
+        updateBoard(evs[i].game);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  }
+);
+
+$(function () {
+  $('span.hex').click(function () {
+    $.post(
+      location.pathname + '/next',
+      { x: $(this).attr('data-hex-x'), y: $(this).attr('data-hex-y') }
+    ).done(
+      function () {
+        // location.reload();
+      }
+    );
+  });
+
+  $('span.hex').hover(
+    function () {
+      $('span.hex[data-hex-id='+$(this).attr('data-hex-id')+']').css('opacity', 0.3);
+    }, function () {
+      $('span.hex[data-hex-id='+$(this).attr('data-hex-id')+']').css('opacity', 1);
+    }
+  );
+});
+    </script>
+  </head>
+  <body>
+    <h1>EulerGetter</h1>
+
+    <p>You are <%= $color || '(guest)' %></p>
+
+    <table>
+      <tbody>
+        <tr>
+          <th>Turn</th>
+          <td>#<span id="game-turn"><%= $game->turn %></span>, turn of <span id="game-current-color"><%= $game->current_color %></span></td>
+        </tr>
+        <tr>
+          <th>Red</th>
+          <td><span id="game-score-red"><%= $game->euler_score_of_color('red') %></span></td>
+        </tr>
+        <tr>
+          <th>Blue</th>
+          <td><span id="game-score-blue"><%= $game->euler_score_of_color('blue') %></span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div id="board" data-game-id="<%= $handler->game_id %>" style="font-size: 100px; line-height: 70px; letter-spacing: 0; width: <%= $board->size * 200 + 100 %>px">
+% for my $y (0 .. $board->size) {
+    <div style="margin-left: <%= ($board->size - $y) * 50 + 50 %>px">
+%   for my $x (0 .. $board->size) {
+%     my $hex = $board->hex_at($x, $y);
+        <span style="color: <%= $hex->color || 'default' %>; position: relative; z-index: <%= $board->size - $y %>" class="hex" data-hex-x="<%= $x %>" data-hex-y="<%= $y %>" data-hex-id="<%= $hex->id %>" tabindex="0">
+        &#x2B22;
+        <!--<span style="left: 0; position: absolute; font-size: 10px; text-shadow: 1px 1px white"><%= $hex %></span>-->
+      </span>
+%   }
+    </div>
+% }
+    </div>
+
+  </body>
+</html>
+

@@ -75,9 +75,9 @@ sub euler_score_of_color {
         }
     }
 
-    warn sprintf "$color v:%d e:%d n:%d", scalar(keys %vertices), scalar(keys %edges), scalar(keys %faces);
-    warn "e=" . join ' ', keys %edges;
-    warn "v=" . join ' ', keys %vertices;
+    # warn sprintf "$color v:%d e:%d n:%d", scalar(keys %vertices), scalar(keys %edges), scalar(keys %faces);
+    # warn "e=" . join ' ', keys %edges;
+    # warn "v=" . join ' ', keys %vertices;
     return scalar(keys %vertices) - scalar(keys %edges) + scalar(keys %faces);
 }
 
@@ -85,8 +85,12 @@ sub as_hash {
     my $self = shift;
 
     return {
-        board => $self->board->as_hash,
-        turn  => $self->turn,
+        board         => $self->board->as_hash,
+        turn          => $self->turn,
+        current_color => $self->current_color,
+        score => {
+            map { ( $_ => $self->euler_score_of_color($_) ) } COLORS
+        },
     };
 }
 
