@@ -1,15 +1,13 @@
 use inc::Module::Install;
 
 name 'App-Web-EulerGetter';
-version '0.1';
+version '0.2';
 license 'perl';
 
-requires 'Plack';
+requires 'Tatsumaki';
 requires 'Plack::Middleware::Session';
-requires 'Router::Simple';
 requires 'JSON::XS';
 requires 'String::Random';
-requires 'Text::MicroTemplate::File';
 requires 'Path::Class';
 requires 'DBIx::Sunny';
 
