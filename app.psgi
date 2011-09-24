@@ -115,7 +115,6 @@ sub get {
     $self->game_id($game_id);
 
     $self->mq->poll_once($self->session->id, sub {
-        warn "recv >>> " , $self->mq->channel;
         $self->write(\@_);
         $self->finish;
     });
@@ -137,7 +136,6 @@ sub post {
             'UPDATE game SET content = ?, updated_on = ? WHERE id = ?',
             encode_json($self->game->as_hash), time(), $self->game_id
         );
-        warn "send <<< " , $self->mq->channel;
         $self->mq->publish({
             event => 'turn',
             game  => $self->game->as_hash,
