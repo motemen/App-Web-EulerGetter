@@ -9,17 +9,15 @@ body {
 th {
   text-align: right;
 }
-.hex {
-  cursor: pointer;
-}
-.hex:hover, .hex:focus {
-  opacity: 0.3;
+input {
+  font-size: larger;
 }
     </style>
   </head>
   <body>
-    <form action="<% $handler->request->script_name %>/start" method="POST">
-      <input type="number" name="size" value="4">
+    <h1>Euler Getter</h1>
+    <form action="./start" method="POST">
+      Start with board size: <input type="number" name="size" value="4">
       <input type="submit" value="start">
     </form>
   </body>

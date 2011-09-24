@@ -89,7 +89,7 @@ sub as_hash {
         turn          => $self->turn,
         current_color => $self->current_color,
         score => {
-            map { ( $_ => $self->euler_score_of_color($_) ) } COLORS
+            map { ( $_ => $self->euler_score_of_color($_) ) } @{ +COLORS }
         },
     };
 }

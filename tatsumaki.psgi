@@ -167,6 +167,8 @@ $app->template_path(dirname(__FILE__) . '/templates');
 $app->static_path(dirname(__FILE__) . '/static');
 
 builder {
-    enable 'Session', store => 'File';
-    $app->psgi_app;
+    mount '/euler-getter' => builder {
+        enable 'Session', store => 'File';
+        $app->psgi_app;
+    };
 };
